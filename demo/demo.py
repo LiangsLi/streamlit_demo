@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from pydantic import BaseModel
 from enum import Enum
+from streamlit_agraph import agraph, Node, Edge, Config
 
 
 class MsgType(str, Enum):
@@ -75,7 +76,7 @@ for message in st.session_state.messages:
 if user_query := st.chat_input("What is up?"):
     user_query = user_query.strip()
     if not user_query:
-        st.warning('请输入非空请求.')
+        st.warning("请输入非空请求.")
         st.stop()
     # Display user message in chat message container
     st.chat_message("user").markdown(user_query)
@@ -128,15 +129,54 @@ if user_query := st.chat_input("What is up?"):
                     mime="application/json",
                     help="下载完整的 DSL 文件",
                 )
-        st.graphviz_chart(
-            """
-    digraph {
-        run -> intr
-        intr -> runbl
-        runbl -> run
-    }
-"""
+        nodes = []
+        edges = []
+        # https://visjs.github.io/vis-network/docs/network/nodes.html
+        nodes.append(
+            Node(
+                id="Spiderman",
+                label="Peter Parker",
+                size=15,
+                shape="box",
+            )
+        )  # includes **kwargs
+        nodes.append(
+            Node(
+                id="Captain_Marvel",
+                label="Captain Marvel",
+                size=15,
+                shape="box",
+            )
         )
+        edges = [
+            Edge(
+                source="Captain_Marvel",
+                label="friend_of",
+                target="Spiderman",
+                smooth=True,
+                length=250,
+                # **kwargs
+            ),
+            Edge(
+                source="Spiderman",
+                label="like",
+                target="Captain_Marvel",
+                smooth=True,
+                length=250,
+                # **kwargs
+            ),
+        ]
+
+        config = Config(
+            width=660,
+            height=170,
+            directed=True,
+            physics=True,
+            hierarchical=False,
+            # **kwargs
+        )
+
+        return_value = agraph(nodes=nodes, edges=edges, config=config)
         st.markdown(response)
     # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
